@@ -1,3 +1,5 @@
+%define kdumplibdir %{_prefix}/lib/kdump
+
 Name: kexec-tools
 Version: 2.0.14
 Release: 7%{?dist}
@@ -29,6 +31,7 @@ Source24: kdump-lib-initramfs.sh
 Source25: kdump.sysconfig.ppc64le
 Source26: kdumpctl.8
 Source27: live-image-kdump-howto.txt
+Source28: kdump-create-config.sh
 
 #######################################
 # These are sources for mkdumpramfs
@@ -160,7 +163,7 @@ make -C kdump-anaconda-addon/po
 
 %install
 make install DESTDIR=$RPM_BUILD_ROOT
-mkdir -p -m755 $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig
+mkdir -p -m755 $RPM_BUILD_ROOT%{_sysconfdir}/kdump
 mkdir -p -m755 $RPM_BUILD_ROOT%{_localstatedir}/crash
 mkdir -p -m755 $RPM_BUILD_ROOT%{_mandir}/man8/
 mkdir -p -m755 $RPM_BUILD_ROOT%{_mandir}/man5/
@@ -176,15 +179,16 @@ install -m 755 %{SOURCE1} $RPM_BUILD_ROOT%{_bindir}/kdumpctl
 SYSCONFIG=$RPM_SOURCE_DIR/kdump.sysconfig.%{_target_cpu}
 [ -f $SYSCONFIG ] || SYSCONFIG=$RPM_SOURCE_DIR/kdump.sysconfig.%{_arch}
 [ -f $SYSCONFIG ] || SYSCONFIG=$RPM_SOURCE_DIR/kdump.sysconfig
-install -m 644 $SYSCONFIG $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/kdump
+install -m 644 $SYSCONFIG $RPM_BUILD_ROOT/%{kdumplibdir}/kdump
 
 install -m 755 %{SOURCE7} $RPM_BUILD_ROOT/sbin/mkdumprd
-install -m 644 %{SOURCE8} $RPM_BUILD_ROOT%{_sysconfdir}/kdump.conf
+install -m 644 %{SOURCE8} $RPM_BUILD_ROOT/%{kdumplibdir}/kdump.conf
 install -m 644 kexec/kexec.8 $RPM_BUILD_ROOT%{_mandir}/man8/kexec.8
 install -m 644 %{SOURCE12} $RPM_BUILD_ROOT%{_mandir}/man8/mkdumprd.8
 install -m 644 %{SOURCE26} $RPM_BUILD_ROOT%{_mandir}/man8/kdumpctl.8
 install -m 755 %{SOURCE20} $RPM_BUILD_ROOT%{_prefix}/lib/kdump/kdump-lib.sh
 install -m 755 %{SOURCE24} $RPM_BUILD_ROOT%{_prefix}/lib/kdump/kdump-lib-initramfs.sh
+install -m 755 %{SOURCE28} $RPM_BUILD_ROOT%{_prefix}/lib/kdump/kdump-create-config.sh
 %ifnarch s390x
 # For s390x the ELF header is created in the kdump kernel and therefore kexec
 # udev rules are not required
@@ -228,13 +232,16 @@ mkdir -p $RPM_BUILD_ROOT/%{dracutlibdir}/modules.d/
 mv $RPM_BUILD_ROOT/etc/kdump-adv-conf/kdump_dracut_modules/* $RPM_BUILD_ROOT/%{dracutlibdir}/modules.d/
 
 %post
+# .conf file handling
+sh %{kdumplibdir}/kdump-create-config.sh
+
 # Initial installation
 %systemd_post kdump.service
 
-touch /etc/kdump.conf
+touch %{kdumplibdir}/kdump.conf
 # This portion of the script is temporary.  Its only here
 # to fix up broken boxes that require special settings 
-# in /etc/sysconfig/kdump.  It will be removed when 
+# in /etc/kdump/kdump.  It will be removed when
 # These systems are fixed.
 
 if [ -d /proc/bus/mckinley ]
@@ -242,16 +249,16 @@ then
 	# This is for HP zx1 machines
 	# They require machvec=dig on the kernel command line
 	sed -e's/\(^KDUMP_COMMANDLINE_APPEND.*\)\("$\)/\1 machvec=dig"/' \
-	/etc/sysconfig/kdump > /etc/sysconfig/kdump.new
-	mv /etc/sysconfig/kdump.new /etc/sysconfig/kdump
+	/etc/kdump/kdump > /etc/kdump/kdump.new
+	mv /etc/kdump/kdump.new /etc/kdump/kdump
 elif [ -d /proc/sgi_sn ]
 then
 	# This is for SGI SN boxes
 	# They require the --noio option to kexec 
 	# since they don't support legacy io
 	sed -e's/\(^KEXEC_ARGS.*\)\("$\)/\1 --noio"/' \
-	/etc/sysconfig/kdump > /etc/sysconfig/kdump.new
-	mv /etc/sysconfig/kdump.new /etc/sysconfig/kdump
+	/etc/kdump/kdump > /etc/kdump/kdump.new
+	mv /etc/kdump/kdump.new /etc/kdump/kdump
 fi
 
 
@@ -274,8 +281,7 @@ fi
 
 
 %triggerin -- kernel-kdump
-touch %{_sysconfdir}/kdump.conf
-
+touch %{kdumplibdir}/kdump.conf
 
 %triggerpostun -- kernel kernel-xen kernel-debug kernel-PAE kernel-kdump
 # List out the initrds here, strip out version nubmers
@@ -303,8 +309,6 @@ done
 %ifarch %{ix86} x86_64 ppc64 s390x ppc64le
 %{_sysconfdir}/makedumpfile.conf.sample
 %endif
-%config(noreplace,missingok) %{_sysconfdir}/sysconfig/kdump
-%config(noreplace,missingok) %{_sysconfdir}/kdump.conf
 %ifnarch s390x
 %config %{_udevrulesdir}
 %endif

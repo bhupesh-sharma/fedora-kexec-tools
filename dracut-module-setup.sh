@@ -1,5 +1,7 @@
 #!/bin/bash
 
+KDUMP_CONFIG_FILE="/etc/kdump/kdump.conf"
+
 . $dracutfunctions
 . /lib/kdump/kdump-lib.sh
 
@@ -10,7 +12,7 @@ fi
 check() {
     [[ $debug ]] && set -x
     #kdumpctl sets this explicitly
-    if [ -z "$IN_KDUMP" ] || [ ! -f /etc/kdump.conf ]
+    if [ -z "$IN_KDUMP" ] || [ ! -f $KDUMP_CONFIG_FILE ]
     then
         return 1
     fi
@@ -439,7 +441,7 @@ adjust_bind_mount_path()
 #install kdump.conf and what user specifies in kdump.conf
 kdump_install_conf() {
     local _opt _val _pdev
-    sed -ne '/^#/!p' /etc/kdump.conf > ${initdir}/tmp/$$-kdump.conf
+    sed -ne '/^#/!p' $KDUMP_CONFIG_FILE > ${initdir}/tmp/$$-kdump.conf
 
     while read _opt _val;
     do
@@ -472,12 +474,12 @@ kdump_install_conf() {
             dracut_install "${_val%%[[:blank:]]*}"
             ;;
         esac
-    done < /etc/kdump.conf
+    done < $KDUMP_CONFIG_FILE
 
     default_dump_target_install_conf
 
     kdump_configure_fence_kdump  "${initdir}/tmp/$$-kdump.conf"
-    inst "${initdir}/tmp/$$-kdump.conf" "/etc/kdump.conf"
+    inst "${initdir}/tmp/$$-kdump.conf" "$KDUMP_CONFIG_FILE"
     rm -f ${initdir}/tmp/$$-kdump.conf
 }
 

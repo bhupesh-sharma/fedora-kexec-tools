@@ -4,7 +4,8 @@ KEXEC=/sbin/kexec
 KDUMP_KERNELVER=""
 KDUMP_COMMANDLINE=""
 KEXEC_ARGS=""
-KDUMP_CONFIG_FILE="/etc/kdump.conf"
+KDUMP_CONFIG_FILE="/etc/kdump/kdump.conf"
+KDUMP_FILE="/etc/kdump/kdump"
 MKDUMPRD="/sbin/mkdumprd -f"
 SAVE_PATH=/var/crash
 SSH_KEY_LOCATION="/root/.ssh/kdump_id_rsa"
@@ -23,14 +24,22 @@ image_time=0
 . $dracutbasedir/dracut-functions.sh
 . /lib/kdump/kdump-lib.sh
 
+# We need to create the final kdump .conf file by looking at both
+# the distribution provided .conf and the user's copy of the .conf
+# file
+. /lib/kdump/kdump-create-config.sh
+
 standard_kexec_args="-p"
 
-# Some default values in case /etc/sysconfig/kdump doesn't include
+# Some default values in case /etc/kdump/kdump doesn't include
 KDUMP_COMMANDLINE_REMOVE="hugepages hugepagesz slub_debug"
 
-if [ -f /etc/sysconfig/kdump ]; then
-	. /etc/sysconfig/kdump
-fi
+source_dump_file()
+{
+	if [ -f $KDUMP_FILE ]; then
+		. $KDUMP_FILE
+	fi
+}
 
 single_instance_lock()
 {
@@ -683,7 +692,7 @@ need_64bit_headers()
 	print (strtonum("0x" r[2]) > strtonum("0xffffffff")); }'`
 }
 
-# Load the kdump kernel specified in /etc/sysconfig/kdump
+# Load the kdump kernel specified in /etc/kdump/kdump
 # If none is specified, try to load a kdump kernel with the same version
 # as the currently running kernel.
 load_kdump()
@@ -932,7 +941,7 @@ save_raw()
 
 get_save_path()
 {
-	local _save_path=$(grep "^path" /etc/kdump.conf|awk '{print $2}')
+	local _save_path=$(grep "^path" $KDUMP_CONFIG_FILE|awk '{print $2}')
 	if [ -z "$_save_path" ]; then
 		_save_path="/var/crash"
 	fi
@@ -944,7 +953,7 @@ is_dump_target_configured()
 {
 	local _target
 
-	_target=$(egrep "^ext[234]|^xfs|^btrfs|^minix|^raw|^ssh|^nfs" /etc/kdump.conf)
+	_target=$(egrep "^ext[234]|^xfs|^btrfs|^minix|^raw|^ssh|^nfs" $KDUMP_CONFIG_FILE)
 
 	[ -n "$_target" ]
 }
@@ -953,7 +962,7 @@ local_fs_dump_target()
 {
 	local _target
 
-	_target=$(egrep "^ext[234]|^xfs|^btrfs|^minix" /etc/kdump.conf)
+	_target=$(egrep "^ext[234]|^xfs|^btrfs|^minix" $KDUMP_CONFIG_FILE)
 	if [ $? -eq 0 ]; then
 		echo $_target|awk '{print $2}'
 	fi
@@ -1120,6 +1129,12 @@ check_default_config()
 
 start()
 {
+	# Gracefully handle all possible combinations od kdump
+	# configuration files and generate the final version of the same
+	# which can be used further
+	handle_dump_config_files
+	source_dump_file
+
 	check_config
 	if [ $? -ne 0 ]; then
 		echo "Starting kdump: [FAILED]"
@@ -1214,11 +1229,6 @@ stop()
 	echo "Stopping kdump: [OK]"
 	return 0
 }
-
-if [ ! -f "$KDUMP_CONFIG_FILE" ]; then
-	echo "Error: No kdump config file found!"  >&2
-	exit 1
-fi
 
 main ()
 {

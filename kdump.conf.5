@@ -14,7 +14,7 @@ this file and do not want to reboot in order for the changes to take
 effect, restart the kdump service to rebuild the initrd.
 
 For most configurations, you can simply review the examples provided
-in the stock /etc/kdump.conf.
+in the stock /lib/kdump/kdump.conf.
 
 .B NOTE: 
 For filesystem dumps the dump target must be mounted before building
@@ -205,7 +205,7 @@ directly.
 
 .B options <module> <option list>
 .RS
-Use KDUMP_COMMANDLINE_APPEND in /etc/sysconfig/kdump to add module options as
+Use KDUMP_COMMANDLINE_APPEND in /etc/kdump/kdump to add module options as
 kernel command line parameters. For example, specify 'loop.max_loop=1' to limit
 maximum loop devices to 1.
 .RE
@@ -226,7 +226,7 @@ Similar to link_delay, dracut ensures disks are ready before kdump uses them.
 Turn on verbose debug output of kdump scripts regarding free/used memory at
 various points of execution.  This feature has been
 moved to dracut now.
-Use KDUMP_COMMANDLINE_APPEND in /etc/sysconfig/kdump and
+Use KDUMP_COMMANDLINE_APPEND in /etc/kdump/kdump and
 append dracut cmdline param rd.memdebug=[0-3] to enable the debug output.
 
 Higher level means more debugging output.
@@ -249,7 +249,7 @@ retaining blacklist option creates more confusing behavior. It has been
 deprecated.
 .PP
 Instead, use rd.driver.blacklist option on second kernel to blacklist
-a certain module. One can edit /etc/sysconfig/kdump.conf and edit
+a certain module. One can edit /etc/kdump/kdump and edit
 KDUMP_COMMANDLINE_APPEND to pass kernel command line options. Refer
 to dracut.cmdline man page for more details on module blacklist option.
 .RE
@@ -326,8 +326,39 @@ Above will effectively be translated to.
 scp /proc/vmcore <user@host>:path/vmcore
 
 .PP
-examples for other options please see
-.I /etc/kdump.conf
+for examples of other options please see
+.I /lib/kdump/kdump.conf
+
+.SH FILES
+.B /lib/kdump/kdump.conf
+.RS
+Distribution kdump configuration file which may be updated during
+package upgrade.
+.RE
+
+.B /etc/kdump.conf
+.RS
+Deprecated user configuration file. New distributions now support
+/etc/kdump/kdump.conf as the default user kdump configuration file.
+.RE
+
+.B /etc/kdump/kdump.conf
+.RS
+User kdump configuration file which takes precedence over the
+distribution kdump configuration file. Any variables specified in
+/etc/kdump/kdump.conf will override the defaults specified in
+/lib/kdump/kdump.conf.
+.RE
+
+.B /etc/kdump/kdump.conf.usrorig
+.RS
+If the user kdump configuration file (/etc/kdump.conf or
+/etc/kdump/kdump.conf) already exists, it is saved as
+/etc/kdump/kdump.conf.usrorig before a new user kdump configuration file
+is generated (by merging contents of the distribution and user
+configuration files), so that the user can refer to the same later
+(if required).
+.RE
 
 .SH SEE ALSO
 

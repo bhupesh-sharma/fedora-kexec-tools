@@ -267,9 +267,9 @@ as allowing for the centralization of vmcore files, should you have several
 systems from which you'd like to obtain vmcore files. Of course, note that
 these configurations could present problems if your network is unreliable.
 
-Advanced setups are configured via modifications to /etc/kdump.conf,
+Advanced setups are configured via modifications to /etc/kdump/kdump.conf,
 which out of the box, is fairly well documented itself. Any alterations to
-/etc/kdump.conf should be followed by a restart of the kdump service, so
+/etc/kdump/kdump.conf should be followed by a restart of the kdump service, so
 the changes can be incorporated in the kdump initrd. Restarting the kdump
 service is as simple as '/sbin/systemctl restart kdump.service'.
 
@@ -278,7 +278,7 @@ Note that kdump.conf is used as a configuration mechanism for capturing dump
 files from the initramfs (in the interests of safety), the root file system is
 mounted, and the init process is started, only as a last resort if the
 initramfs fails to capture the vmcore.  As such, configuration made in
-/etc/kdump.conf is only applicable to capture recorded in the initramfs.  If
+/etc/kdump/kdump.conf is only applicable to capture recorded in the initramfs.  If
 for any reason the init process is started on the root file system, only a
 simple copying of the vmcore from /proc/vmcore to /var/crash/$DATE/vmcore will
 be preformed.
@@ -352,7 +352,7 @@ about the format of "--mount" for details. If there is any "--mount" specified
 via "dracut_args", kdump will build it as the mount target without doing any
 validation (mounting or checking like mount options, fs size, save path, etc),
 so you must test it to ensure all the correctness. You cannot use other targets
-in /etc/kdump.conf if you use "--mount" in "dracut_args". You also cannot specify
+in /etc/kdump/kdump.conf if you use "--mount" in "dracut_args". You also cannot specify
 mutliple "--mount" targets via "dracut_args".
 
 One use case of "--mount" in "dracut_args" is you do not want to mount dump target
@@ -430,7 +430,7 @@ command and get an output:
 	cat /proc/cmdline
 	BOOT_IMAGE=/xxx/vmlinuz-3.yyy.zzz  root=xxxx .....
 Then kdump kernel will be /boot/xxx/vmlinuz-3.yyy.zzz.
-However a variable KDUMP_BOOTDIR in /etc/sysconfig/kdump is provided to
+However a variable KDUMP_BOOTDIR in /etc/kdump/kdump is provided to
 user if kdump kernel is put in a different directory.
 
 Kdump Post-Capture Executable
@@ -616,12 +616,12 @@ operating and capturing a vmcore image, but a casual observer will see the
 system as hung until the dump completes and a true reboot is executed.
 
 There are two possiblilties to work around this issue.  One is by adding
---reset-vga to the kexec command line options in /etc/sysconfig/kdump.  This
+--reset-vga to the kexec command line options in /etc/kdump/kdump.  This
 tells kdump to write some reasonable default values to the video card register
 file, in the hopes of returning it to a text mode such that boot messages are
 visible on the screen.  It does not work with all video cards however.
 Secondly, it may be worth trying to add vga15fb.ko to the extra_modules list in
-/etc/kdump.conf.  This will attempt to use the video card in framebuffer mode,
+/etc/kdump/kdump.conf.  This will attempt to use the video card in framebuffer mode,
 which can blank the screen prior to the start of a dump capture.
 
 Notes on rootfs mount:
@@ -629,7 +629,7 @@ Dracut is designed to mount rootfs by default. If rootfs mounting fails it
 will refuse to go on. So kdump leaves rootfs mounting to dracut currently.
 We make the assumtion that proper root= cmdline is being passed to dracut
 initramfs for the time being. If you need modify "KDUMP_COMMANDLINE=" in
-/etc/sysconfig/kdump, you will need to make sure that appropriate root=
+/etc/kdump/kdump, you will need to make sure that appropriate root=
 options are copied from /proc/cmdline. In general it is best to append
 command line options using "KDUMP_COMMANDLINE_APPEND=" instead of replacing
 the original command line completely.
@@ -668,7 +668,7 @@ hardware issue (*). The disable_cpu_apicid kernel option is automatically
 appended by kdumpctl script and is ignored if the kernel doesn't support it.
 
 You need to specify how many cpus to be used in a capture kernel by specifying
-the number of cpus in nr_cpus kernel option in /etc/sysconfig/kdump. nr_cpus
+the number of cpus in nr_cpus kernel option in /etc/kdump/kdump. nr_cpus
 is 1 at default.
 
 You should use necessary and sufficient number of cpus on a capture kernel.

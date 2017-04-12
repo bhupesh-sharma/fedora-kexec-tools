@@ -170,7 +170,7 @@ mkdir -p -m755 $RPM_BUILD_ROOT%{_udevrulesdir}
 mkdir -p $RPM_BUILD_ROOT%{_unitdir}
 mkdir -p -m755 $RPM_BUILD_ROOT%{_bindir}
 mkdir -p -m755 $RPM_BUILD_ROOT%{_libdir}
-mkdir -p -m755 $RPM_BUILD_ROOT%{_prefix}/lib/kdump
+mkdir -p -m755 $RPM_BUILD_ROOT%{_libdir}/kdump
 install -m 755 %{SOURCE1} $RPM_BUILD_ROOT%{_bindir}/kdumpctl
 
 SYSCONFIG=$RPM_SOURCE_DIR/kdump.sysconfig.%{_target_cpu}
@@ -183,8 +183,8 @@ install -m 644 %{SOURCE8} $RPM_BUILD_ROOT%{_sysconfdir}/kdump.conf
 install -m 644 kexec/kexec.8 $RPM_BUILD_ROOT%{_mandir}/man8/kexec.8
 install -m 644 %{SOURCE12} $RPM_BUILD_ROOT%{_mandir}/man8/mkdumprd.8
 install -m 644 %{SOURCE26} $RPM_BUILD_ROOT%{_mandir}/man8/kdumpctl.8
-install -m 755 %{SOURCE20} $RPM_BUILD_ROOT%{_prefix}/lib/kdump/kdump-lib.sh
-install -m 755 %{SOURCE24} $RPM_BUILD_ROOT%{_prefix}/lib/kdump/kdump-lib-initramfs.sh
+install -m 755 %{SOURCE20} $RPM_BUILD_ROOT%{_libdir}/kdump/kdump-lib.sh
+install -m 755 %{SOURCE24} $RPM_BUILD_ROOT%{_libdir}/kdump/kdump-lib-initramfs.sh
 %ifnarch s390x
 # For s390x the ELF header is created in the kdump kernel and therefore kexec
 # udev rules are not required
@@ -192,7 +192,7 @@ install -m 644 %{SOURCE14} $RPM_BUILD_ROOT%{_udevrulesdir}/98-kexec.rules
 %endif
 install -m 644 %{SOURCE15} $RPM_BUILD_ROOT%{_mandir}/man5/kdump.conf.5
 install -m 644 %{SOURCE16} $RPM_BUILD_ROOT%{_unitdir}/kdump.service
-install -m 755 -D %{SOURCE22} $RPM_BUILD_ROOT%{_prefix}/lib/systemd/system-generators/kdump-dep-generator.sh
+install -m 755 -D %{SOURCE22} $RPM_BUILD_ROOT%{_libdir}/systemd/system-generators/kdump-dep-generator.sh
 
 %ifarch %{ix86} x86_64 ppc64 s390x ppc64le
 install -m 755 makedumpfile-1.6.1/makedumpfile $RPM_BUILD_ROOT/sbin/makedumpfile
@@ -222,7 +222,7 @@ chmod 755 $RPM_BUILD_ROOT/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{
 chmod 755 $RPM_BUILD_ROOT/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{remove_dracut_prefix %{SOURCE101}}
 
 
-%define dracutlibdir %{_prefix}/lib/dracut
+%define dracutlibdir %{_libdir}/dracut
 #and move the custom dracut modules to the dracut directory
 mkdir -p $RPM_BUILD_ROOT/%{dracutlibdir}/modules.d/
 mv $RPM_BUILD_ROOT/etc/kdump-adv-conf/kdump_dracut_modules/* $RPM_BUILD_ROOT/%{dracutlibdir}/modules.d/
@@ -299,7 +299,7 @@ done
 /sbin/*
 %{_bindir}/*
 %{_datadir}/kdump
-%{_prefix}/lib/kdump
+%{_libdir}/kdump
 %ifarch %{ix86} x86_64 ppc64 s390x ppc64le
 %{_sysconfdir}/makedumpfile.conf.sample
 %endif
@@ -313,7 +313,7 @@ done
 %{_mandir}/man8/*
 %{_mandir}/man5/*
 %{_unitdir}/kdump.service
-%{_prefix}/lib/systemd/system-generators/kdump-dep-generator.sh
+%{_libdir}/systemd/system-generators/kdump-dep-generator.sh
 %doc News
 %doc COPYING
 %doc TODO

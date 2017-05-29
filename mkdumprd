@@ -294,7 +294,7 @@ handle_default_dump_target()
 get_default_action_target()
 {
     local _target
-    local _action=$(grep "^default" /etc/kdump.conf 2>/dev/null | awk '{print $2}')
+    local _action=$(grep "^default" $conf_file 2>/dev/null | awk '{print $2}')
     if [ -n "$_action" ] && [ "$_action" = "dump_to_rootfs" ]; then
         #get rootfs device name
         _target=$(findmnt -k -f -n -o SOURCE /)

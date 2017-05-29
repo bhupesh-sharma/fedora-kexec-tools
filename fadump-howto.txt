@@ -54,7 +54,7 @@ after crash. Hence, for fadump, we rebuild the new kdump initrd and replace it
 with default initrd. Before replacing existing default initrd we take a backup
 of original default initrd for user's reference. The dracut package has been
 enhanced to rebuild the default initrd with vmcore capture steps. The initrd
-image is rebuilt as per the configuration in /etc/kdump.conf file.
+image is rebuilt as per the configuration in /etc/kdump/kdump.conf file.
 
 The control flow of fadump works as follows:
 01. System panics.
@@ -69,9 +69,9 @@ The control flow of fadump works as follows:
     steps to capture vmcore.
     (This check will help to bypass the vmcore capture steps during normal boot
      process.)
-09. Captures dump according to /etc/kdump.conf
+09. Captures dump according to /etc/kdump/kdump.conf
 10. Is dump capture successful (yes goto 12, no goto 11)
-11. Perfom the default action specified in /etc/kdump.conf (Default action
+11. Perfom the default action specified in /etc/kdump/kdump.conf (Default action
     is reboot, if unspecified)
 12. Reboot
 
@@ -245,7 +245,7 @@ Dracut is designed to mount rootfs by default. If rootfs mounting fails it
 will refuse to go on. So fadump leaves rootfs mounting to dracut currently.
 We make the assumtion that proper root= cmdline is being passed to dracut
 initramfs for the time being. If you need modify "KDUMP_COMMANDLINE=" in
-/etc/sysconfig/kdump, you will need to make sure that appropriate root=
+/etc/kdump/kdump, you will need to make sure that appropriate root=
 options are copied from /proc/cmdline. In general it is best to append
 command line options using "KDUMP_COMMANDLINE_APPEND=" instead of replacing
 the original command line completely.

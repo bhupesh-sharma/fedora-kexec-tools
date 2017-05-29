@@ -11,9 +11,8 @@
 . /lib/kdump/kdump-lib.sh
 export IN_KDUMP=1
 
-conf_file="/etc/kdump.conf"
 SSH_KEY_LOCATION="/root/.ssh/kdump_id_rsa"
-SAVE_PATH=$(grep ^path $conf_file| cut -d' '  -f2)
+SAVE_PATH=$(grep ^path $KDUMP_CONFIG_FILE| cut -d' '  -f2)
 [ -z "$SAVE_PATH" ] && SAVE_PATH=$DEFAULT_PATH
 # strip the duplicated "/"
 SAVE_PATH=$(echo $SAVE_PATH | tr -s /)
@@ -228,7 +227,7 @@ check_size() {
 
 # $1: core_collector config value
 verify_core_collector() {
-    if grep -q "^raw" $conf_file && [ "${1%% *}" != "makedumpfile" ]; then
+    if grep -q "^raw" $KDUMP_CONFIG_FILE && [ "${1%% *}" != "makedumpfile" ]; then
         echo "Warning: specifying a non-makedumpfile core collector, you will have to recover the vmcore manually."
     fi
     if is_ssh_dump_target || is_raw_dump_target; then
@@ -294,7 +293,7 @@ handle_default_dump_target()
 get_default_action_target()
 {
     local _target
-    local _action=$(grep "^default" /etc/kdump.conf 2>/dev/null | awk '{print $2}')
+    local _action=$(grep "^default" $KDUMP_CONFIG_FILE 2>/dev/null | awk '{print $2}')
     if [ -n "$_action" ] && [ "$_action" = "dump_to_rootfs" ]; then
         #get rootfs device name
         _target=$(findmnt -k -f -n -o SOURCE /)
@@ -307,7 +306,7 @@ get_override_resettable()
 {
     local override_resettable
 
-    override_resettable=$(grep "^override_resettable" $conf_file)
+    override_resettable=$(grep "^override_resettable" $KDUMP_CONFIG_FILE)
     if [ -n "$override_resettable" ]; then
         OVERRIDE_RESETTABLE=$(echo $override_resettable | cut -d' '  -f2)
         if [ "$OVERRIDE_RESETTABLE" != "0" ] && [ "$OVERRIDE_RESETTABLE" != "1" ];then
@@ -423,7 +422,7 @@ if ! check_crypt; then
 fi
 
 # firstly get right SSH_KEY_LOCATION
-keyfile=$(awk '/^sshkey/ {print $2}' $conf_file)
+keyfile=$(awk '/^sshkey/ {print $2}' $KDUMP_CONFIG_FILE)
 if [ -f "$keyfile" ]; then
     # canonicalize the path
     SSH_KEY_LOCATION=$(/usr/bin/readlink -m $keyfile)
@@ -494,7 +493,7 @@ do
         fi
         ;;
     esac
-done < $conf_file
+done < $KDUMP_CONFIG_FILE
 
 handle_default_dump_target
 

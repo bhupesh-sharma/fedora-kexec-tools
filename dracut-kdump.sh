@@ -7,6 +7,7 @@ fi
 
 exec &> /dev/console
 . /lib/dracut-lib.sh
+. /lib/kdump-lib.sh
 . /lib/kdump-lib-initramfs.sh
 
 set -o pipefail
@@ -133,8 +134,8 @@ get_host_ip()
 
 read_kdump_conf()
 {
-    if [ ! -f "$KDUMP_CONF" ]; then
-        echo "kdump: $KDUMP_CONF not found"
+    if [ ! -f "$KDUMP_CONFIG_FILE" ]; then
+        echo "kdump: $KDUMP_CONFIG_FILE not found"
         return
     fi
 
@@ -160,7 +161,7 @@ read_kdump_conf()
             add_dump_code "dump_ssh $SSH_KEY_LOCATION $config_val"
             ;;
         esac
-    done < $KDUMP_CONF
+    done < $KDUMP_CONFIG_FILE
 }
 
 fence_kdump_notify()

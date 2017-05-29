@@ -4,7 +4,6 @@ KEXEC=/sbin/kexec
 KDUMP_KERNELVER=""
 KDUMP_COMMANDLINE=""
 KEXEC_ARGS=""
-KDUMP_CONFIG_FILE="/etc/kdump.conf"
 MKDUMPRD="/sbin/mkdumprd -f"
 SAVE_PATH=/var/crash
 SSH_KEY_LOCATION="/root/.ssh/kdump_id_rsa"
@@ -173,7 +172,7 @@ check_kdump_cpus()
 
 is_dump_to_rootfs()
 {
-	grep "^default[[:space:]]dump_to_rootfs" /etc/kdump.conf >/dev/null
+	grep "^default[[:space:]]dump_to_rootfs" $KDUMP_CONFIG_FILE >/dev/null
 }
 
 # This function performs a series of edits on the command line.
@@ -976,7 +975,7 @@ save_raw()
 
 get_save_path()
 {
-	local _save_path=$(grep "^path" /etc/kdump.conf|awk '{print $2}')
+	local _save_path=$(grep "^path" $KDUMP_CONFIG_FILE|awk '{print $2}')
 	if [ -z "$_save_path" ]; then
 		_save_path="/var/crash"
 	fi
@@ -988,7 +987,7 @@ is_dump_target_configured()
 {
 	local _target
 
-	_target=$(egrep "^ext[234]|^xfs|^btrfs|^minix|^raw|^ssh|^nfs" /etc/kdump.conf)
+	_target=$(egrep "^ext[234]|^xfs|^btrfs|^minix|^raw|^ssh|^nfs" $KDUMP_CONFIG_FILE)
 
 	[ -n "$_target" ]
 }
@@ -997,7 +996,7 @@ local_fs_dump_target()
 {
 	local _target
 
-	_target=$(egrep "^ext[234]|^xfs|^btrfs|^minix" /etc/kdump.conf)
+	_target=$(egrep "^ext[234]|^xfs|^btrfs|^minix" $KDUMP_CONFIG_FILE)
 	if [ $? -eq 0 ]; then
 		echo $_target|awk '{print $2}'
 	fi

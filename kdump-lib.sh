@@ -6,6 +6,7 @@
 DEFAULT_PATH="/var/crash/"
 FENCE_KDUMP_CONFIG_FILE="/etc/sysconfig/fence_kdump"
 FENCE_KDUMP_SEND="/usr/libexec/fence_kdump_send"
+KDUMP_CONFIG_FILE="/etc/kdump.conf"
 
 perror_exit() {
     echo $@ >&2
@@ -18,18 +19,18 @@ perror() {
 
 is_ssh_dump_target()
 {
-    grep -q "^ssh[[:blank:]].*@" /etc/kdump.conf
+    grep -q "^ssh[[:blank:]].*@" $KDUMP_CONFIG_FILE
 }
 
 is_nfs_dump_target()
 {
-    grep -q "^nfs" /etc/kdump.conf || \
-        [[ $(get_dracut_args_fstype "$(grep "^dracut_args .*\-\-mount" /etc/kdump.conf)") = nfs* ]]
+    grep -q "^nfs" $KDUMP_CONFIG_FILE || \
+        [[ $(get_dracut_args_fstype "$(grep "^dracut_args .*\-\-mount" $KDUMP_CONFIG_FILE)") = nfs* ]]
 }
 
 is_raw_dump_target()
 {
-    grep -q "^raw" /etc/kdump.conf
+    grep -q "^raw" $KDUMP_CONFIG_FILE
 }
 
 is_fs_type_nfs()
@@ -41,7 +42,7 @@ is_fs_type_nfs()
 
 is_fs_dump_target()
 {
-    egrep -q "^ext[234]|^xfs|^btrfs|^minix" /etc/kdump.conf
+    egrep -q "^ext[234]|^xfs|^btrfs|^minix" $KDUMP_CONFIG_FILE
 }
 
 is_user_configured_dump_target()
@@ -71,7 +72,7 @@ is_generic_fence_kdump()
 {
     [ -x $FENCE_KDUMP_SEND ] || return 1
 
-    grep -q "^fence_kdump_nodes" /etc/kdump.conf
+    grep -q "^fence_kdump_nodes" $KDUMP_CONFIG_FILE
 }
 
 to_dev_name() {
@@ -96,7 +97,7 @@ get_user_configured_dump_disk()
         return
     fi
 
-    _target=$(egrep "^ext[234]|^xfs|^btrfs|^minix|^raw" /etc/kdump.conf 2>/dev/null |awk '{print $2}')
+    _target=$(egrep "^ext[234]|^xfs|^btrfs|^minix|^raw" $KDUMP_CONFIG_FILE 2>/dev/null |awk '{print $2}')
     [ -n "$_target" ] && echo $_target
 
     return
@@ -194,7 +195,7 @@ get_mntpoint_from_target()
 # get_option_value <option_name>
 # retrieves value of option defined in kdump.conf
 get_option_value() {
-    echo $(strip_comments `grep "^$1[[:space:]]\+" /etc/kdump.conf | tail -1 | cut -d\  -f2-`)
+    echo $(strip_comments `grep "^$1[[:space:]]\+" $KDUMP_CONFIG_FILE | tail -1 | cut -d\  -f2-`)
 }
 
 #This function compose a absolute path with the mount
@@ -369,7 +370,7 @@ is_wdt_mod_omitted() {
 	local dracut_args
 	local ret=1
 
-	dracut_args=$(grep  "^dracut_args" /etc/kdump.conf)
+	dracut_args=$(grep  "^dracut_args" $KDUMP_CONFIG_FILE)
 	[[ -z $dracut_args ]] && return $ret
 
 	eval set -- $dracut_args
@@ -392,7 +393,7 @@ is_wdt_mod_omitted() {
 # its correctness).
 is_mount_in_dracut_args()
 {
-    grep -q "^dracut_args .*\-\-mount" /etc/kdump.conf
+    grep -q "^dracut_args .*\-\-mount" $KDUMP_CONFIG_FILE
 }
 
 # If $1 contains dracut_args "--mount", return <filesystem type>

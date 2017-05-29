@@ -6,7 +6,7 @@
 DEFAULT_PATH="/var/crash/"
 FENCE_KDUMP_CONFIG_FILE="/etc/sysconfig/fence_kdump"
 FENCE_KDUMP_SEND="/usr/libexec/fence_kdump_send"
-KDUMP_CONFIG_FILE="/etc/kdump.conf"
+KDUMP_CONFIG_FILE="/etc/kdump/kdump.conf"
 
 perror_exit() {
     echo $@ >&2

@@ -11,7 +11,7 @@
 . /lib/kdump/kdump-lib.sh
 export IN_KDUMP=1
 
-conf_file="/etc/kdump.conf"
+conf_file="/etc/kdump/kdump.conf"
 SSH_KEY_LOCATION="/root/.ssh/kdump_id_rsa"
 SAVE_PATH=$(grep ^path $conf_file| cut -d' '  -f2)
 [ -z "$SAVE_PATH" ] && SAVE_PATH=$DEFAULT_PATH

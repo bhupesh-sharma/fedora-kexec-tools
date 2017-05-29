@@ -4,7 +4,8 @@ KEXEC=/sbin/kexec
 KDUMP_KERNELVER=""
 KDUMP_COMMANDLINE=""
 KEXEC_ARGS=""
-KDUMP_CONFIG_FILE="/etc/kdump.conf"
+KDUMP_CONFIG_FILE="/etc/kdump/kdump.conf"
+KDUMP_FILE="/etc/kdump/kdump"
 MKDUMPRD="/sbin/mkdumprd -f"
 SAVE_PATH=/var/crash
 SSH_KEY_LOCATION="/root/.ssh/kdump_id_rsa"
@@ -25,12 +26,15 @@ image_time=0
 
 standard_kexec_args="-p"
 
-# Some default values in case /etc/sysconfig/kdump doesn't include
+# Some default values in case /etc/kdump/kdump doesn't include
 KDUMP_COMMANDLINE_REMOVE="hugepages hugepagesz slub_debug"
 
-if [ -f /etc/sysconfig/kdump ]; then
-	. /etc/sysconfig/kdump
-fi
+source_dump_file()
+{
+	if [ -f $KDUMP_FILE ]; then
+		. $KDUMP_FILE
+	fi
+}
 
 single_instance_lock()
 {
@@ -746,7 +750,7 @@ need_64bit_headers()
 	print (strtonum("0x" r[2]) > strtonum("0xffffffff")); }'`
 }
 
-# Load the kdump kernel specified in /etc/sysconfig/kdump
+# Load the kdump kernel specified in /etc/kdump/kdump
 # If none is specified, try to load a kdump kernel with the same version
 # as the currently running kernel.
 load_kdump()
@@ -1268,11 +1272,6 @@ stop()
 	return 0
 }
 
-if [ ! -f "$KDUMP_CONFIG_FILE" ]; then
-	echo "Error: No kdump config file found!"  >&2
-	exit 1
-fi
-
 main ()
 {
 	# Determine if the dump mode is kdump or fadump
@@ -1322,6 +1321,8 @@ main ()
 
 # Other kdumpctl instances will block in queue, until this one exits
 single_instance_lock
+
+source_dump_file
 
 # To avoid fd 9 leaking, we invoke a subshell, close fd 9 and call main.
 # So that fd isn't leaking when main is invoking a subshell.

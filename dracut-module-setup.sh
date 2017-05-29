@@ -1,6 +1,6 @@
 #!/bin/bash
 
-KDUMP_CONFIG_FILE="/etc/kdump.conf"
+KDUMP_CONFIG_FILE="/etc/kdump/kdump.conf"
 
 . $dracutfunctions
 . /lib/kdump/kdump-lib.sh

@@ -1,7 +1,20 @@
 #!/bin/bash
 
 . $dracutfunctions
-. /lib/kdump/kdump-lib.sh
+
+# Detect lib path
+if ! [[ $libdir ]] ; then
+    if [[ "$(ldd /bin/sh)" == */lib64/* ]] &>/dev/null \
+        && [[ -d /lib64 ]]; then
+        libdir=" /lib64"
+    else
+        libdir=" /lib"
+    fi
+
+    export libdir
+fi
+
+. $libdir/kdump/kdump-lib.sh
 
 if ! [[ -d "${initdir}/tmp" ]]; then
     mkdir -p "${initdir}/tmp"
@@ -727,8 +740,8 @@ install() {
     inst "/bin/head" "/bin/head"
     inst "/sbin/makedumpfile" "/sbin/makedumpfile"
     inst "/sbin/vmcore-dmesg" "/sbin/vmcore-dmesg"
-    inst "/lib/kdump/kdump-lib.sh" "/lib/kdump-lib.sh"
-    inst "/lib/kdump/kdump-lib-initramfs.sh" "/lib/kdump-lib-initramfs.sh"
+    inst "$libdir/kdump/kdump-lib.sh" "lib/kdump-lib.sh"
+    inst "$libdir/kdump/kdump-lib-initramfs.sh" "lib/kdump-lib-initramfs.sh"
     inst "$moddir/kdump.sh" "/usr/bin/kdump.sh"
     inst "$moddir/kdump-capture.service" "$systemdsystemunitdir/kdump-capture.service"
     ln_r "$systemdsystemunitdir/kdump-capture.service" "$systemdsystemunitdir/initrd.target.wants/kdump-capture.service"

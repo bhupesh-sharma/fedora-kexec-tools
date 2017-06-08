@@ -3,7 +3,19 @@
 # More details about systemd generator:
 # http://www.freedesktop.org/wiki/Software/systemd/Generators/
 
-. /lib/kdump/kdump-lib.sh
+# Detect lib path
+if ! [[ $libdir ]] ; then
+    if [[ "$(ldd /bin/sh)" == */lib64/* ]] &>/dev/null \
+        && [[ -d /lib64 ]]; then
+        libdir=" /lib64"
+    else
+        libdir=" /lib"
+    fi
+
+    export libdir
+fi
+
+. $libdir/kdump/kdump-lib.sh
 
 # If invokded with no arguments for testing purpose, output to /tmp to
 # avoid overriding the existing.
